@@ -14,13 +14,18 @@
 #include "game/world/world_generator.hpp"
 
 #include "game/render/buffer.hpp"
+#include "game/render/shader.hpp"
+#include "game/render/texture.hpp"
 #include "game/render/vertex_array.hpp"
 
 namespace game {
     class World;
 
     struct TileInstanceData {
+        glm::uvec2 localTilePos;
         unsigned int tileId;
+
+        static TileInstanceData of(unsigned int x, unsigned int y, Tile tile);
     };
 
     class Chunk {
@@ -32,28 +37,33 @@ namespace game {
 
         void save();
 
-        Tile& operator[](uint32_t x, uint32_t y);
         const Tile& operator[](uint32_t x, uint32_t y) const;
-
-        Tile& operator[](const glm::uvec2& local);
         const Tile& operator[](const glm::uvec2& local) const;
+
+        void setTile(uint32_t x, uint32_t y, const Tile& tile);
+        void setTile(const glm::uvec2& local, const Tile& tile);
 
         void markDirty();
         void rebuildMesh();
+        bool needsRebuildMesh() const;
+
+        void drawCall() const;
 
     private:
-        std::array<Tile, CHUNK_SIZE * CHUNK_SIZE> m_Tiles;
-        bool m_Dirty = false;
-        World* m_World;
+        std::array<Tile, CHUNK_SIZE * CHUNK_SIZE>             m_Tiles;
+        std::array<TileInstanceData, CHUNK_SIZE * CHUNK_SIZE> m_TileInstanceData;
+        bool                                                  m_Dirty = false;
+        World*                                                m_World;
 
+        glm::ivec2 m_ChunkPosition;
         std::shared_ptr<VertexArray> m_ChunkVao;
-        std::shared_ptr<Buffer> m_InstanceBuffer;
+        std::shared_ptr<Buffer>      m_InstanceBuffer;
     };
 
     class World {
     public:
         static constexpr std::size_t MAX_CHUNKS = 32;
-        static constexpr uint32_t    TILE_SIZE  = 16;
+        // static constexpr uint32_t    TILE_SIZE  = 16;
 
         World();
         ~World();
@@ -62,19 +72,24 @@ namespace game {
 
         [[nodiscard]] std::shared_ptr<WorldGenerator> generator() const { return m_Generator; }
 
+        inline const Buffer& primaryTileVbo() const { return *m_TileVbo; };
+
         inline static glm::ivec2 worldToChunk(const glm::vec2& world) noexcept {
-            return glm::floor(world / static_cast<float>(TILE_SIZE) / static_cast<float>(Chunk::CHUNK_SIZE));
+            return glm::floor(world / static_cast<float>(Chunk::CHUNK_SIZE));
         }
 
-        inline static glm::ivec2 worldToTile(const glm::vec2& world) noexcept {
-            return glm::floor(world / static_cast<float>(TILE_SIZE));
-        }
+
+        [[nodiscard]] std::shared_ptr<Shader> tileShader() const { return m_TileShader; }
+
+        void render();
 
     private:
         lru_cache<glm::ivec2, Chunk, World*> m_Chunks;
         std::shared_ptr<WorldGenerator>      m_Generator;
 
         std::shared_ptr<Buffer> m_TileVbo;
+        std::shared_ptr<Shader> m_TileShader;
+        std::shared_ptr<Texture> m_AtlasTexture;
     };
 
 } // namespace game

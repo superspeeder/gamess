@@ -15,6 +15,11 @@ namespace game {
         Texture(int width, int height, GLenum format, int internal_format, GLenum pixel_type, const void* data);
         ~Texture();
 
+        Texture(const Texture& other)                = delete;
+        Texture(Texture&& other) noexcept            = default;
+        Texture& operator=(const Texture& other)     = delete;
+        Texture& operator=(Texture&& other) noexcept = default;
+
         void bind(int unit) const;
 
 

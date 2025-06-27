@@ -12,9 +12,19 @@ namespace game {
         VertexArray();
         ~VertexArray();
 
+        VertexArray(const VertexArray& other)                = delete;
+        VertexArray(VertexArray&& other) noexcept            = default;
+        VertexArray& operator=(const VertexArray& other)     = delete;
+        VertexArray& operator=(VertexArray&& other) noexcept = default;
+
         void bind() const;
 
         void bindVertexBuffer(const Buffer& buffer, const std::vector<unsigned int> &attributes);
+
+        unsigned int nextAttribute();
+        unsigned int nextBinding();
+
+        [[nodiscard]] inline unsigned int getHandle() const noexcept { return m_Handle; }
 
     private:
         unsigned int m_Handle{};

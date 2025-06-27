@@ -33,4 +33,8 @@ namespace game {
         m_NextAttribute += attributes.size();
         m_NextBinding++;
     }
+
+    unsigned int VertexArray::nextAttribute() { return m_NextAttribute++; }
+
+    unsigned int VertexArray::nextBinding() { return m_NextBinding++; }
 } // game

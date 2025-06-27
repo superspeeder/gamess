@@ -12,7 +12,7 @@ namespace game {
 
     Buffer::~Buffer() { glDeleteBuffers(1, &m_Handle); }
 
-    void Buffer::bind(BufferTarget target) const { glBindBuffer(m_Handle, static_cast<GLenum>(target)); }
+    void Buffer::bind(BufferTarget target) const { glBindBuffer(static_cast<GLenum>(target), m_Handle); }
 
     void Buffer::data(const void* data, const std::size_t size, const BufferUsage usage) const {
         glNamedBufferData(m_Handle, size, data, static_cast<GLenum>(usage));

@@ -5,6 +5,7 @@
 #include "game.hpp"
 
 #include <glm/glm.hpp>
+#include <iostream>
 
 namespace game {
     struct Vertex {
@@ -17,9 +18,24 @@ namespace game {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+        glfwWindowHint(GLFW_CONTEXT_DEBUG, GLFW_TRUE);
 
-        m_Window = glfwCreateWindow(640, 480, "Game", nullptr, nullptr);
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        int mx, my;
+        glfwGetMonitorPos(monitor, &mx, &my);
+
+        glfwWindowHint(GLFW_POSITION_X, mx);
+        glfwWindowHint(GLFW_POSITION_Y, my);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+        glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+        glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+        glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+        m_Window = glfwCreateWindow(mode->width, mode->height, "Game", nullptr, nullptr);
         glfwMakeContextCurrent(m_Window);
         gladLoadGL(glfwGetProcAddress);
 
@@ -41,25 +57,25 @@ namespace game {
     Game::~Game() { }
 
     void Game::run() {
+        using clock = std::chrono::high_resolution_clock;
+
+
         while (!glfwWindowShouldClose(m_Window)) {
             glfwPollEvents();
 
-            auto chunks = m_World->chunksInView({0, 0}, {1920, 1080});
 
             int w, h;
             glfwGetFramebufferSize(m_Window, &w, &h);
             glViewport(0, 0, w, h);
 
-            glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            m_Shader->use();
-            m_VertexArray->bind();
-
-            // m_Texture->bind(0);
-            // glUniform1i(glGetUniformLocation(m_Shader->getHandle(), "uTexture"), 0);
-
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            auto render_start = clock::now();
+            m_World->render();
+            auto render_end = clock::now();
+            auto render_time = render_end - render_start;
+            std::cout << render_time << '\n';
 
             glfwSwapBuffers(m_Window);
         }

@@ -42,6 +42,11 @@ namespace game {
 
         ~Buffer();
 
+        Buffer(const Buffer& other)                = delete;
+        Buffer(Buffer&& other) noexcept            = default;
+        Buffer& operator=(const Buffer& other)     = delete;
+        Buffer& operator=(Buffer&& other) noexcept = default;
+
         void bind(BufferTarget target) const;
 
         void data(const void* data, std::size_t size, BufferUsage usage) const;

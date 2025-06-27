@@ -31,6 +31,11 @@ namespace game {
         explicit Shader(const std::vector<ShaderStage>& stages);
         ~Shader();
 
+        Shader(const Shader& other)                = delete;
+        Shader(Shader&& other) noexcept            = default;
+        Shader& operator=(const Shader& other)     = delete;
+        Shader& operator=(Shader&& other) noexcept = default;
+
         static std::shared_ptr<Shader> loadSimpleShader(const std::filesystem::path& vertexPath,
                                                         const std::filesystem::path& fragmentPath);
 

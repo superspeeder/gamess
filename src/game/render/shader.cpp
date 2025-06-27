@@ -17,13 +17,15 @@ namespace game {
             glCompileShader(shader);
             int success;
             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-            if (!success) {
+            if (success != GL_TRUE) {
                 int length;
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-                std::string log(length, 0);
-                glGetShaderInfoLog(m_Handle, length, nullptr, log.data());
+                char* log = new char[length];
+                memset(log, '\0', length);
+                glGetShaderInfoLog(m_Handle, length, nullptr, log);
                 std::cerr << "Failed to compile shader: " << log << std::endl;
-                throw std::runtime_error("Failed to compile shader.");
+                delete[] log;
+                // throw std::runtime_error("Failed to compile shader.");
             }
             glAttachShader(m_Handle, shader);
             shaders.push_back(shader);
@@ -31,16 +33,29 @@ namespace game {
         glLinkProgram(m_Handle);
         int success;
         glGetProgramiv(m_Handle, GL_LINK_STATUS, &success);
-        if (!success) {
+        if (success != GL_TRUE) {
             int length;
             glGetProgramiv(m_Handle, GL_INFO_LOG_LENGTH, &length);
-            std::string log(length, 0);
-            glGetProgramInfoLog(m_Handle, length, nullptr, log.data());
+            char* log = new char[length];
+            memset(log, '\0', length);
+            glGetProgramInfoLog(m_Handle, length, nullptr, log);
             std::cerr << "Failed to link program: " << log << std::endl;
+            delete[] log;
         }
 
         for (const unsigned int shader : shaders) {
             glDeleteShader(shader);
+        }
+
+
+        int numActiveUniforms = 0;
+        glGetProgramiv(m_Handle, GL_ACTIVE_UNIFORMS, &numActiveUniforms);
+        std::cout << numActiveUniforms << " active uniforms" << std::endl;
+
+        for (int i = 0 ; i < numActiveUniforms; i++) {
+            char name[128] = {};
+            glGetActiveUniformName(m_Handle, i, 128, nullptr, name);
+            std::cout << "- " << name << ": " << i << std::endl;
         }
     }
 
