@@ -13,14 +13,21 @@
 #include "game/world/tile.hpp"
 #include "game/world/world_generator.hpp"
 
-namespace game {
+#include "game/render/buffer.hpp"
+#include "game/render/vertex_array.hpp"
 
+namespace game {
+    class World;
+
+    struct TileInstanceData {
+        unsigned int tileId;
+    };
 
     class Chunk {
     public:
         static constexpr uint32_t CHUNK_SIZE = 64;
 
-        Chunk(const glm::ivec2& chunk, const std::shared_ptr<WorldGenerator>& generator);
+        Chunk(const glm::ivec2& chunk, World* world);
         ~Chunk();
 
         void save();
@@ -37,6 +44,10 @@ namespace game {
     private:
         std::array<Tile, CHUNK_SIZE * CHUNK_SIZE> m_Tiles;
         bool m_Dirty = false;
+        World* m_World;
+
+        std::shared_ptr<VertexArray> m_ChunkVao;
+        std::shared_ptr<Buffer> m_InstanceBuffer;
     };
 
     class World {
@@ -62,6 +73,8 @@ namespace game {
     private:
         lru_cache<glm::ivec2, Chunk, World*> m_Chunks;
         std::shared_ptr<WorldGenerator>      m_Generator;
+
+        std::shared_ptr<Buffer> m_TileVbo;
     };
 
 } // namespace game

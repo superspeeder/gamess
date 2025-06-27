@@ -13,7 +13,7 @@ namespace game {
     };
 
     Game::Game() {
-        glfwInit();
+        glfwDefaultWindowHints();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -38,7 +38,7 @@ namespace game {
         m_World = std::make_shared<World>();
     }
 
-    Game::~Game() { glfwTerminate(); }
+    Game::~Game() { }
 
     void Game::run() {
         while (!glfwWindowShouldClose(m_Window)) {

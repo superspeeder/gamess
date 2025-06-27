@@ -5,8 +5,11 @@
 
 int main() {
     using namespace game;
-
-    Game game;
-    game.run();
+    glfwInit();
+    {
+        Game game;
+        game.run();
+    }
+    glfwTerminate();
     return 0;
 }

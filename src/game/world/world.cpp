@@ -8,7 +8,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 namespace game {
-    Chunk::Chunk(const glm::ivec2& chunk, const std::shared_ptr<WorldGenerator>& generator) {
+    Chunk::Chunk(const glm::ivec2& chunk, World* world) : m_World(world) {
         std::cout << "Load " << glm::to_string(chunk) << std::endl;
         if (chunk.x % 2 != chunk.y % 2) {
             for (uint32_t y = 0; y < CHUNK_SIZE; ++y) {
@@ -33,7 +33,7 @@ namespace game {
     void Chunk::markDirty() { m_Dirty = true; }
 
     void Chunk::rebuildMesh() {
-        // TODO
+
     }
 
     static Chunk* chunk_load(const glm::ivec2& chunk, World* world) { return new Chunk(chunk, world->generator()); }
