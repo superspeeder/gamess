@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <iostream>
+#include <chrono>
 
 namespace game {
     struct Vertex {
@@ -63,7 +64,6 @@ namespace game {
         while (!glfwWindowShouldClose(m_Window)) {
             glfwPollEvents();
 
-
             int w, h;
             glfwGetFramebufferSize(m_Window, &w, &h);
             glViewport(0, 0, w, h);
@@ -72,12 +72,19 @@ namespace game {
             glClear(GL_COLOR_BUFFER_BIT);
 
             auto render_start = clock::now();
-            m_World->render();
+            frame();
             auto render_end = clock::now();
             auto render_time = render_end - render_start;
-            std::cout << render_time << '\n';
+            // std::cout << render_time << '\n';
 
             glfwSwapBuffers(m_Window);
         }
+    }
+
+    void Game::frame() {
+
+
+        m_World->render();
+    
     }
 } // namespace game

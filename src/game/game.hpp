@@ -27,6 +27,7 @@ namespace game {
         ~Game();
 
         void run();
+        void frame();
 
     private:
         GLFWwindow* m_Window;

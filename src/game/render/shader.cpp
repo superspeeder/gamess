@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <cstring>
 
 namespace game {
     Shader::Shader(const std::vector<ShaderStage>& stages) : m_Handle(glCreateProgram()) {
@@ -21,7 +22,7 @@ namespace game {
                 int length;
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
                 char* log = new char[length];
-                memset(log, '\0', length);
+                std::memset(log, '\0', length);
                 glGetShaderInfoLog(m_Handle, length, nullptr, log);
                 std::cerr << "Failed to compile shader: " << log << std::endl;
                 delete[] log;
@@ -37,7 +38,7 @@ namespace game {
             int length;
             glGetProgramiv(m_Handle, GL_INFO_LOG_LENGTH, &length);
             char* log = new char[length];
-            memset(log, '\0', length);
+            std::memset(log, '\0', length);
             glGetProgramInfoLog(m_Handle, length, nullptr, log);
             std::cerr << "Failed to link program: " << log << std::endl;
             delete[] log;
@@ -63,9 +64,12 @@ namespace game {
 
     static std::string loadFile(const std::filesystem::path& path) {
         std::ifstream f(path, std::ios::ate | std::ios::in);
-        const auto    sz = f.tellg();
+        if (!f.is_open()) {
+            throw std::runtime_error("Failed to open file");
+        }
+        const auto    sz = static_cast<std::size_t>(f.tellg());
         f.seekg(0, std::ios::beg);
-        std::string text(sz, 0);
+        std::string text(sz, '\0');
         f.read(text.data(), sz);
         f.close();
         return text;
