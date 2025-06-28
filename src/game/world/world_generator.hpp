@@ -3,11 +3,25 @@
 //
 
 #pragma once
+#include "FastNoiseLite.h"
+#include "game/world/tile.hpp"
+
+#include <glm/vec2.hpp>
 
 namespace game {
 
-class WorldGenerator {
+    class WorldGenerator {
+      public:
+        WorldGenerator();
+        ~WorldGenerator();
 
-};
+        Tile generateTile(const glm::ivec2& tileCoords);
 
-} // game
+      private:
+        int m_Seed;
+        FastNoiseLite m_Noise;
+        FastNoiseLite m_Noise2;
+        FastNoiseLite m_Noise3;
+    };
+
+} // namespace game

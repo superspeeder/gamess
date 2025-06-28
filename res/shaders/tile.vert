@@ -23,9 +23,9 @@ void main() {
     uint realTileId = tileId - 1;
     fTileId = realTileId;
 
-    vec2 tileSize = vec2(1.0 / float(uAtlasSize.y), 1.0 / float(uAtlasSize.x));
+    vec2 tileSize = vec2(1.0 / float(uAtlasSize.x), 1.0 / float(uAtlasSize.y));
     float row = float(realTileId / uAtlasSize.x) + positionIn.x;
     float column = float(realTileId % uAtlasSize.x) + positionIn.y; // we use the same number to avoid any issues
-    fTextureCoords = vec2(row, column) * tileSize;
+    fTextureCoords = vec2(column, row) * tileSize;
 }
 

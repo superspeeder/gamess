@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 
 #include "game/render/buffer.hpp"
+#include "game/render/camera.hpp"
 #include "game/render/shader.hpp"
 #include "game/render/texture.hpp"
 #include "game/render/vertex_array.hpp"
@@ -27,7 +28,7 @@ namespace game {
         ~Game();
 
         void run();
-        void frame();
+        void frame(float delta);
 
     private:
         GLFWwindow* m_Window;
@@ -36,8 +37,13 @@ namespace game {
         std::shared_ptr<Buffer> m_VertexBuffer;
         std::shared_ptr<VertexArray> m_VertexArray;
         std::shared_ptr<Texture> m_Texture;
+        std::shared_ptr<Texture> m_Texture2;
 
         std::shared_ptr<World> m_World;
+        SmoothCamera m_Camera;
+
+        float m_LastFrame;
+        float m_ThisFrame;
 
     };
 

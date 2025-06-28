@@ -11,6 +11,9 @@ find_package(Boost REQUIRED COMPONENTS system filesystem)
 add_library(gl gl/src/gl.c)
 target_include_directories(gl PUBLIC gl/include/)
 
+add_library(fastnoise INTERFACE)
+target_include_directories(fastnoise INTERFACE libs/fastnoise)
+
 add_executable(game src/main.cpp
         src/game/game.cpp
         src/game/game.hpp
@@ -27,8 +30,10 @@ add_executable(game src/main.cpp
         src/game/world/world_generator.cpp
         src/game/world/world_generator.hpp
         src/game/utils/lru_cache.hpp
-        src/game/world/tile.hpp)
+        src/game/world/tile.hpp
+        src/game/render/camera.cpp
+        src/game/render/camera.hpp)
 target_include_directories(game PRIVATE src/ ${Stb_INCLUDE_DIR})
-target_link_libraries(game PRIVATE glfw glm::glm gl)
+target_link_libraries(game PRIVATE glfw glm::glm gl fastnoise)
 target_compile_definitions(game PRIVATE GLM_ENABLE_EXPERIMENTAL GLFW_INCLUDE_NONE)
 

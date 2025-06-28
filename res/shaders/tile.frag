@@ -8,6 +8,6 @@ out vec4 colorOut;
 uniform sampler2D uTexture;
 
 void main() {
-    colorOut = texture(uTexture, fTextureCoords);
+    colorOut = texture(uTexture, vec2(fTextureCoords.x, 1.0 - fTextureCoords.y));
 //    colorOut = vec4(1.0, 1.0, 1.0, 1.0);
 }

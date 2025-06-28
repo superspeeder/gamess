@@ -6,6 +6,7 @@
 
 #include <concepts>
 #include <functional>
+#include <iostream>
 #include <list>
 #include <unordered_map>
 
@@ -85,6 +86,7 @@ namespace game {
             m_map.erase(back.first);
             m_value_map.erase(back.first);
             m_destructor(back.second, m_userdata);
+            m_cache_list.pop_back();
         }
 
         void insert_new(const K& key, V* value) {
