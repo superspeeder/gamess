@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 23)
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 find_package(Stb REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system filesystem)
 
 add_library(gl gl/src/gl.c)
 target_include_directories(gl PUBLIC gl/include/)
@@ -34,6 +34,6 @@ add_executable(game src/main.cpp
         src/game/render/camera.cpp
         src/game/render/camera.hpp)
 target_include_directories(game PRIVATE src/ ${Stb_INCLUDE_DIR})
-target_link_libraries(game PRIVATE glfw glm::glm gl fastnoise)
+target_link_libraries(game PRIVATE glfw glm::glm gl fastnoise spdlog::spdlog)
 target_compile_definitions(game PRIVATE GLM_ENABLE_EXPERIMENTAL GLFW_INCLUDE_NONE)
 
