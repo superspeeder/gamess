@@ -14,7 +14,9 @@ target_include_directories(gl PUBLIC gl/include/)
 add_library(fastnoise INTERFACE)
 target_include_directories(fastnoise INTERFACE libs/fastnoise)
 
-add_executable(game src/main.cpp
+add_executable(game src/main.cpp)
+
+add_library(game_internal
         src/game/game.cpp
         src/game/game.hpp
         src/game/render/shader.cpp
@@ -33,7 +35,12 @@ add_executable(game src/main.cpp
         src/game/world/tile.hpp
         src/game/render/camera.cpp
         src/game/render/camera.hpp)
-target_include_directories(game PRIVATE src/ ${Stb_INCLUDE_DIR})
-target_link_libraries(game PRIVATE glfw glm::glm gl fastnoise spdlog::spdlog)
-target_compile_definitions(game PRIVATE GLM_ENABLE_EXPERIMENTAL GLFW_INCLUDE_NONE)
+target_include_directories(game_internal PUBLIC src/ ${Stb_INCLUDE_DIR})
+target_link_libraries(game_internal PUBLIC glfw glm::glm gl fastnoise spdlog::spdlog)
+target_compile_definitions(game_internal PUBLIC GLM_ENABLE_EXPERIMENTAL GLFW_INCLUDE_NONE)
+target_compile_features(game_internal PUBLIC cxx_std_23)
 
+target_link_libraries(game PRIVATE game_internal)
+
+
+add_subdirectory(tests)

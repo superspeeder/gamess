@@ -170,3 +170,4 @@ fabric.properties
 /.cache/
 /build/
 /vcpkg_toolchain.cmake
+/tests/game_test
