@@ -3,9 +3,12 @@
 layout(location = 0) in vec2 positionIn;
 layout(location = 1) in uvec2 localTilePos;
 layout(location = 2) in uint tileId;
+layout(location = 3) in uint tileBordering;
 
 out vec2 fTextureCoords;
+out vec2 fRawTextureCoords;
 flat out uint fTileId;
+flat out uint fTileBordering;
 
 uniform uvec2 uAtlasSize;
 uniform mat4 uTransformMatrix;
@@ -14,6 +17,7 @@ uniform vec2 uChunkOffset;
 
 void main() {
     gl_Position = uTransformMatrix * vec4(uChunkOffset + positionIn + localTilePos, 0.0, 1.0);
+    fRawTextureCoords = positionIn;
 
     if (tileId == 0) {
         gl_Position = vec4(0.0,0.0,0.0,0.0);
@@ -27,5 +31,7 @@ void main() {
     float row = float(realTileId / uAtlasSize.x) + positionIn.x;
     float column = float(realTileId % uAtlasSize.x) + positionIn.y; // we use the same number to avoid any issues
     fTextureCoords = vec2(column, row) * tileSize;
+
+    fTileBordering = tileBordering;
 }
 

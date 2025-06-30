@@ -18,8 +18,8 @@ namespace game {
     const std::vector<unsigned int> PRIMARY_TILE_ATTRIBUTES = {2};
     constexpr static glm::uvec2     ATLAS_SIZE              = glm::uvec2(4, 4);
 
-    TileInstanceData TileInstanceData::of(unsigned int x, unsigned int y, const Tile tile) {
-        return TileInstanceData{.localTilePos = {x, y}, .tileId = tile.tile_id};
+    TileInstanceData TileInstanceData::of(unsigned int x, unsigned int y, const Tile tile, unsigned char borderInfo) {
+        return TileInstanceData{.localTilePos = {x, y}, .tileId = tile.tile_id, .tileBorderInfo = borderInfo};
     }
 
     Chunk::Chunk(const glm::ivec2 &chunk, World *world) : m_ChunkPosition(chunk), m_World(world) {
@@ -41,9 +41,10 @@ namespace game {
 
         m_ChunkVao->bind();
         m_InstanceBuffer->bind(BufferTarget::Array);
-        unsigned int binding          = m_ChunkVao->nextBinding();
-        unsigned int tilePosAttribute = m_ChunkVao->nextAttribute();
-        unsigned int tileIdAttribute  = m_ChunkVao->nextAttribute();
+        unsigned int binding             = m_ChunkVao->nextBinding();
+        unsigned int tilePosAttribute    = m_ChunkVao->nextAttribute();
+        unsigned int tileIdAttribute     = m_ChunkVao->nextAttribute();
+        unsigned int tileBorderAttribute = m_ChunkVao->nextAttribute();
 
         glBindVertexBuffer(binding, m_InstanceBuffer->getHandle(), 0, sizeof(TileInstanceData));
         glVertexArrayBindingDivisor(m_ChunkVao->getHandle(), binding, 1);
@@ -55,6 +56,10 @@ namespace game {
         glVertexAttribBinding(tileIdAttribute, binding);
         glVertexAttribIFormat(tileIdAttribute, 1, GL_UNSIGNED_INT, offsetof(TileInstanceData, tileId));
         glEnableVertexAttribArray(tileIdAttribute);
+
+        glVertexAttribBinding(tileBorderAttribute, binding);
+        glVertexAttribIFormat(tileBorderAttribute, 1, GL_UNSIGNED_BYTE, offsetof(TileInstanceData, tileBorderInfo));
+        glEnableVertexAttribArray(tileBorderAttribute);
     }
 
     Chunk::~Chunk() {
@@ -73,10 +78,44 @@ namespace game {
         return m_Tiles[local.y * CHUNK_SIZE + local.x];
     }
 
-    void Chunk::setTile(uint32_t x, uint32_t y, const Tile &tile) {
+    void Chunk::setTile(const uint32_t x, const uint32_t y, const Tile &tile) {
         markDirty();
         m_Tiles[y * CHUNK_SIZE + x]            = tile;
-        m_TileInstanceData[y * CHUNK_SIZE + x] = TileInstanceData::of(x, y, tile);
+        m_TileInstanceData[y * CHUNK_SIZE + x] = TileInstanceData::of(x, y, tile, borderInfoFor(x, y));
+
+        if (tile.tile_id == 0) {
+            if (x > 0) {
+                m_TileInstanceData[y * CHUNK_SIZE + x - 1].tileBorderInfo |= 0b100;
+            }
+
+            if (y > 0) {
+                m_TileInstanceData[(y - 1) * CHUNK_SIZE + x].tileBorderInfo |= 0b1000;
+            }
+
+            if (x < CHUNK_SIZE - 1) {
+                m_TileInstanceData[y * CHUNK_SIZE + x + 1].tileBorderInfo |= 0b1;
+            }
+
+            if (y < CHUNK_SIZE - 1) {
+                m_TileInstanceData[(y + 1) * CHUNK_SIZE + x].tileBorderInfo |= 0b10;
+            }
+        } else {
+            if (x > 0) {
+                m_TileInstanceData[y * CHUNK_SIZE + x - 1].tileBorderInfo &= 0b1011;
+            }
+
+            if (y > 0) {
+                m_TileInstanceData[(y - 1) * CHUNK_SIZE + x].tileBorderInfo &= 0b0111;
+            }
+
+            if (x < CHUNK_SIZE - 1) {
+                m_TileInstanceData[y * CHUNK_SIZE + x + 1].tileBorderInfo &= 0b1110;
+            }
+
+            if (y < CHUNK_SIZE - 1) {
+                m_TileInstanceData[(y + 1) * CHUNK_SIZE + x].tileBorderInfo &= 0b1101;
+            }
+        }
     }
 
     void Chunk::setTile(const glm::uvec2 &local, const Tile &tile) {
@@ -107,12 +146,54 @@ namespace game {
         glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, CHUNK_SIZE * CHUNK_SIZE);
     }
 
-    static Chunk *chunk_load(const glm::ivec2 &chunk, World *world) {
-        return new Chunk(chunk, world);
+    bool Chunk::isAir(uint32_t x, uint32_t y) const {
+        return m_Tiles[y * CHUNK_SIZE + x].tile_id == 0;
+    }
+
+    void Chunk::onNeighborLoaded(Chunk *chunk) {
+        for (uint32_t i = 0; i < CHUNK_SIZE; i++) {
+            // borderings
+            if (chunk->m_ChunkPosition.x > m_ChunkPosition.x && chunk->isAir(0, i)) {
+                m_TileInstanceData[i * CHUNK_SIZE + CHUNK_SIZE - 1].tileBorderInfo |= 0b100;
+            } else if (chunk->m_ChunkPosition.y > m_ChunkPosition.y && chunk->isAir(i, 0)) {
+                m_TileInstanceData[CHUNK_SIZE * (CHUNK_SIZE - 1) + i].tileBorderInfo |= 0b1000;
+            } else if (chunk->m_ChunkPosition.x < m_ChunkPosition.x && chunk->isAir(CHUNK_SIZE - 1, i)) {
+                m_TileInstanceData[CHUNK_SIZE * i].tileBorderInfo |= 0b1;
+            } else if (chunk->m_ChunkPosition.y < m_ChunkPosition.y && chunk->isAir(i, CHUNK_SIZE - 1)) {
+                m_TileInstanceData[i].tileBorderInfo |= 0b10;
+            }
+        }
+    }
+
+    static Chunk *chunk_load(const glm::ivec2 &chunkPos, World *world) {
+        auto chunk = new Chunk(chunkPos, world);
+        world->onLoadedChunk(chunk);
+        return chunk;
     }
 
     static void chunk_unload(Chunk *chunk, World *world) {
         delete chunk;
+    }
+
+    unsigned char Chunk::borderInfoFor(const uint32_t x, const uint32_t y) const {
+        unsigned char borderInfo = 0;
+        if (x > 0) {
+            borderInfo |= isAir(x - 1, y) ? 0b1 : 0b0;
+        }
+
+        if (y > 0) {
+            borderInfo |= isAir(x, y - 1) ? 0b10 : 0b0;
+        }
+
+        if (x < CHUNK_SIZE - 1) {
+            borderInfo |= isAir(x + 1, y) ? 0b100 : 0b0;
+        }
+
+        if (y < CHUNK_SIZE - 1) {
+            borderInfo |= isAir(x, y + 1) ? 0b1000 : 0b0;
+        }
+
+        return borderInfo;
     }
 
     World::World() : m_Chunks(MAX_CHUNKS, chunk_load, chunk_unload, this) {
@@ -138,6 +219,33 @@ namespace game {
         }
 
         return chunks;
+    }
+
+    void World::onLoadedChunk(Chunk *chunk) {
+        Chunk* left = m_Chunks.get_if_present(chunk->position() - glm::ivec2(1, 0));
+        Chunk* right = m_Chunks.get_if_present(chunk->position() + glm::ivec2(1, 0));
+        Chunk* down = m_Chunks.get_if_present(chunk->position() - glm::ivec2(0, 1));
+        Chunk* up = m_Chunks.get_if_present(chunk->position() + glm::ivec2(0, 1));
+
+        if (left) {
+            left->onNeighborLoaded(chunk);
+            chunk->onNeighborLoaded(left);
+        }
+
+        if (right) {
+            right->onNeighborLoaded(chunk);
+            chunk->onNeighborLoaded(right);
+        }
+
+        if (down) {
+            down->onNeighborLoaded(chunk);
+            chunk->onNeighborLoaded(down);
+        }
+
+        if (up) {
+            up->onNeighborLoaded(chunk);
+            chunk->onNeighborLoaded(up);
+        }
     }
 
     void World::render(const Camera &camera) {

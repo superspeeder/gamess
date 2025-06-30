@@ -14,19 +14,20 @@
 #include "game/world/world_generator.hpp"
 
 #include "game/render/buffer.hpp"
+#include "game/render/camera.hpp"
 #include "game/render/shader.hpp"
 #include "game/render/texture.hpp"
 #include "game/render/vertex_array.hpp"
-#include "game/render/camera.hpp"
 
 namespace game {
     class World;
 
     struct TileInstanceData {
-        glm::uvec2   localTilePos;
-        unsigned int tileId;
+        glm::uvec2    localTilePos;
+        unsigned int  tileId;
+        unsigned char tileBorderInfo;
 
-        static TileInstanceData of(unsigned int x, unsigned int y, Tile tile);
+        static TileInstanceData of(unsigned int x, unsigned int y, Tile tile, unsigned char borderInfo);
     };
 
     class Chunk {
@@ -50,6 +51,12 @@ namespace game {
 
         void drawCall() const;
 
+        bool isAir(uint32_t x, uint32_t y) const;
+
+        void onNeighborLoaded(Chunk *chunk);
+
+        [[nodiscard]] inline const glm::ivec2& position() const noexcept { return m_ChunkPosition; };
+
       private:
         std::array<Tile, CHUNK_SIZE * CHUNK_SIZE>             m_Tiles;
         std::array<TileInstanceData, CHUNK_SIZE * CHUNK_SIZE> m_TileInstanceData;
@@ -59,6 +66,8 @@ namespace game {
         glm::ivec2                   m_ChunkPosition;
         std::shared_ptr<VertexArray> m_ChunkVao;
         std::shared_ptr<Buffer>      m_InstanceBuffer;
+
+        unsigned char borderInfoFor(uint32_t x, uint32_t y) const;
     };
 
     class World {
@@ -76,13 +85,15 @@ namespace game {
 
         [[nodiscard]] const Buffer &primaryTileVbo() const { return *m_TileVbo; }
 
+        void onLoadedChunk(Chunk *chunk);
+
         inline static glm::ivec2 worldToChunk(const glm::vec2 &world) noexcept {
             return glm::floor(world / static_cast<float>(Chunk::CHUNK_SIZE));
         }
 
         [[nodiscard]] std::shared_ptr<Shader> tileShader() const { return m_TileShader; }
 
-        void render(const Camera& camera);
+        void render(const Camera &camera);
 
       private:
         lru_cache<glm::ivec2, Chunk, World *> m_Chunks;
