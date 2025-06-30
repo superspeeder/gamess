@@ -24,7 +24,7 @@ namespace game {
 
     Chunk::Chunk(const glm::ivec2 &chunk, World *world) : m_ChunkPosition(chunk), m_World(world) {
 
-        std::cout << "Load " << glm::to_string(chunk) << std::endl;
+        //std::cout << "Load " << glm::to_string(chunk) << std::endl;
         for (uint32_t y = 0; y < CHUNK_SIZE; ++y) {
             int wy = y + chunk.y * CHUNK_SIZE;
             for (uint32_t x = 0; x < CHUNK_SIZE; ++x) {
