@@ -12,6 +12,12 @@
 
 namespace game {
 
+    /**
+     * @brief A simple least-recently-used cache
+     * @tparam K The key type
+     * @tparam V The value type
+     * @tparam U The userdata type
+     */
     template <typename K, typename V, typename U>
     class lru_cache {
     public:
@@ -56,6 +62,19 @@ namespace game {
 
         // doesn't affect order
         const std::unordered_map<K, V*>& get_all() const { return m_map; }
+
+        inline std::size_t size() const { return m_cache_list.size(); }
+        inline std::size_t max_size() const { return m_max_size; }
+
+        inline void load(const K& key) {
+            auto it = m_map.find(key);
+            if (it == m_map.end()) {
+                load_new(key);
+                return;
+            }
+
+            touch(it);
+        }
 
     private:
         std::list<std::pair<K, V*>>                                           m_cache_list;

@@ -9,7 +9,8 @@ if (GAME_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     enable_testing()
-    add_executable(game_test src/game/tests/test_main.cpp)
+    add_executable(game_test src/game/tests/test_main.cpp
+            src/game/tests/test_lru_cache.cpp)
     target_link_libraries(game_test PRIVATE GTest::gtest_main game_internal)
 
     include(GoogleTest)
